@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+	<Properties>
+	    <Property name="application.name">${bundle:application:spring.application.name}</Property>
+	</Properties>
+	<Appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout pattern="%d{yyyy/MM/dd@HH:mm:ss.SSS} [%t] %-5level %logger{36} ${application.name} %X{X-B3-TraceId} - %msg%n" charset="UTF-8" />
+		</Console>
+        <RollingFile name="ApLog" fileName="./log/ap.log" filePattern="./log/ap-%d{yyyy/MM/dd}-%i.log">
+           <PatternLayout alwaysWriteExceptions="false" pattern='{"timestamp":"%d{yyyy/MM/dd@HH:mm:ss.SSS}", "application":"${application.name}", "level":"%-5level", "log-type":"ap-log", "trace-id":"%X{X-B3-TraceId}", "span-id":"%X{X-B3-SpanId}", "thread":"[%t]", "PID":"%clr{${sys:PID}}", "message":"%msg", "throwable":"%enc{%throwable}"}%n' charset="UTF-8" />
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="500 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="2000"/>
+        </RollingFile>
+        <RollingFile name="TraceSql" fileName="./log/trace-sql.log" filePattern="./log/trace-sql-%d{yyyy/MM/dd}-%i.log">
+            <PatternLayout alwaysWriteExceptions="false" pattern='{"timestamp":"%d{yyyy/MM/dd@HH:mm:ss.SSS}", "application":"${application.name}", "level":"%-5level", "log-type":"sql-log", "trace-id":"%X{X-B3-TraceId}", "span-id":"%X{X-B3-SpanId}", "thread":"[%t]", "PID":"%clr{${sys:PID}}", "sql-info":%msg, "throwable":"%enc{%throwable}"}%n' charset="UTF-8" />
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="500 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="2000"/>
+        </RollingFile>
+        <RollingFile name="Inbound" fileName="./log/inbound.log" filePattern="./log/inbound-%d{yyyy/MM/dd}-%i.log">
+            <PatternLayout alwaysWriteExceptions="false" pattern='{"timestamp":"%d{yyyy/MM/dd@HH:mm:ss.SSS}", "application":"${application.name}", "level":"%-5level", "log-type":"inbound-log", "trace-id":"%X{X-B3-TraceId}", "span-id":"%X{X-B3-SpanId}", "thread":"[%t]", "PID":"%clr{${sys:PID}}", "inbound-info":%msg, "throwable":"%enc{%throwable}"}%n' charset="UTF-8" />
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="500 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="2000"/>
+        </RollingFile>
+        <RollingFile name="Outbound" fileName="./log/outbound.log" filePattern="./log/outbound-%d{yyyy/MM/dd}-%i.log">
+            <PatternLayout alwaysWriteExceptions="false" pattern='{"timestamp":"%d{yyyy/MM/dd@HH:mm:ss.SSS}", "application":"${application.name}", "level":"%-5level", "log-type":"outbound-log", "trace-id":"%X{X-B3-TraceId}", "span-id":"%X{X-B3-SpanId}", "thread":"[%t]", "PID":"%clr{${sys:PID}}", "outbound-info":%msg, "throwable":"%enc{%throwable}"}%n' charset="UTF-8" />
+            <Policies>
+                <TimeBasedTriggeringPolicy />
+                <SizeBasedTriggeringPolicy size="500 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="2000"/>
+        </RollingFile>
+        <Kafka name="Kafka" topic="UP0090_AUDITLOG" ignoreExceptions="true">
+			<PatternLayout pattern="%message" charset="UTF-8" />
+			<Property name="bootstrap.servers">192.168.5.150:9093,192.168.5.151:9093,192.168.5.152:9093</Property>
+			<Property name="security.protocol">SASL_SSL</Property>
+			<Property name="sasl.mechanism">SCRAM-SHA-256</Property>
+			<Property name="ssl.endpoint.identification.algorithm">HTTPS</Property>
+			<Property name="acks">1</Property>
+			<Property name="ssl.truststore.location">F:\\ApacheKafka\\UAT憑證\\cert\\truststore.jks</Property>
+			<Property name="ssl.truststore.password">esun@1313</Property>
+			<Property name="sasl.jaas.config" value="org.apache.kafka.common.security.scram.ScramLoginModule required username='admin' 
+			password='admin-secret';" />
+			<!-- <Property name="sasl.jaas.config">KafkaClient{com.sun.security.auth.module.Krb5LoginModule required useTicketCache=false useKeyTab=true storeKey=true keyTab=F:\\EFK\\KafkaCert\\test_user.keytab principal=test_user@KAFKA.COM};</Property> -->
+		</Kafka>
+		<File name="TxFailover" fileName="./tx/tx-failover.log" ignoreExceptions="false" immediateFlush="true" append="true" >
+			<PatternLayout alwaysWriteExceptions="false" pattern="%msg%n" charset="UTF-8" />
+		</File>
+		<Failover name="Failover" primary="TxFailover">
+			<Failovers>
+				<AppenderRef ref="TxFailover" />
+			</Failovers>
+		</Failover>
+	</Appenders>
+	<Loggers>
+		<Root level="INFO">
+			<AppenderRef ref="Console" />
+			<AppenderRef ref="ApLog" />
+		</Root>
+		<Logger name="TraceSql" level="INFO" additivity="false">
+			<AppenderRef ref="TraceSql" />
+		</Logger>
+		<Logger name="Inbound" level="DEBUG" additivity="false">
+			<AppenderRef ref="Inbound" />
+		</Logger>
+		<Logger name="Outbound" level="DEBUG" additivity="false">
+			<AppenderRef ref="Outbound" />
+		</Logger>
+		<Logger name="Audit2Kafka" level="INFO" additivity="false">
+			<AppenderRef ref="Failover" />
+		</Logger>
+		<Logger name="Audit2Log4j2" level="INFO" additivity="false">
+			<AppenderRef ref="TxFailover" />
+		</Logger>
+		<Logger name="org.apache.kafka" level="DEBUG"/>
+		<Logger name="org.apache.commons.dbcp2" level="DEBUG"/>
+		<Logger name="org.springframework.jdbc" level="DEBUG"/>
+		<Logger name="org.springframework.transaction" level="DEBUG"/>
+	</Loggers>
+</Configuration>

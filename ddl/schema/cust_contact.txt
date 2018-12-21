@@ -1,0 +1,16 @@
+CREATE TABLE Tb_Cust_Contact
+  (
+    cust_contact_id          INTEGER NOT NULL ,
+    cust_id                  INTEGER NOT NULL ,
+    efx_contact_person_name  VARCHAR2 (200 CHAR) ,
+    efx_contact_person_phone VARCHAR2 (50 CHAR)
+  )
+  LOGGING ;
+COMMENT ON COLUMN Tb_Cust_Contact.efx_contact_person_name
+IS
+  '外匯聯絡人姓名' ;
+  COMMENT ON COLUMN Tb_Cust_Contact.efx_contact_person_phone
+IS
+  '外匯連絡人電話' ;
+  ALTER TABLE Tb_Cust_Contact ADD CONSTRAINT Cust_Contact_PK PRIMARY KEY ( cust_contact_id ) ;
+  CREATE SEQUENCE cust_seq START WITH 1;

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+	http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd 
+	">
+
+	<!-- For Spring Configuration Example -->
+	<!-- <bean class="com.esb.cbp.conf.WebSwaggerConfiguration" /> -->
+	<!-- For Spring Configuration Example -->
+
+	<bean id="jdbcTemplate"
+		class="org.springframework.jdbc.core.JdbcTemplate">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<!-- <bean id="dataSource" -->
+	<!-- class="org.springframework.jdbc.datasource.DriverManagerDataSource"> -->
+	<!-- <property name="driverClassName" -->
+	<!-- value="org.postgresql.Driver" /> -->
+	<!-- <property name="url" -->
+	<!-- value="jdbc:postgresql://localhost:5432/CIP" /> -->
+	<!-- <property name="username" value="postgres" /> -->
+	<!-- <property name="password" value="admin" /> -->
+	<!-- </bean> -->
+
+<!-- 	<bean id="dataSource" -->
+<!-- 		class="org.springframework.jdbc.datasource.DriverManagerDataSource"> -->
+<!-- 		<property name="driverClassName" -->
+<!-- 			value="oracle.jdbc.OracleDriver" /> -->
+<!-- 		<property name="url" -->
+<!-- 			value="jdbc:oracle:thin:@localhost:1521:xe" /> -->
+<!-- 		<property name="username" value="CIP_test" /> -->
+<!-- 		<property name="password" value="123" /> -->
+<!-- 	</bean> -->
+
+<!-- 	<bean id="dataSource" -->
+<!-- 		class="org.apache.commons.dbcp2.BasicDataSource" -->
+<!-- 		destroy-method="close"> -->
+<!-- 		<property name="driverClassName" -->
+<!-- 			value="oracle.jdbc.driver.OracleDriver" /> -->
+<!-- 		<property name="url" -->
+<!-- 			value="jdbc:oracle:thin:@localhost:1521:xe" /> -->
+<!-- 		<property name="username" value="CIP_test" /> -->
+<!-- 		<property name="password" value="123" /> -->
+<!-- 		<property name="initialSize" value="2" /> -->
+<!-- 		<property name="maxIdle" value="5" /> -->
+<!-- 		<property name="maxTotal" value="10" /> -->
+<!-- 		<property name="testOnCreate" value="true" /> -->
+<!-- 		<property name="defaultAutoCommit" value="false" /> -->
+<!-- 		<property name="jmxName" -->
+<!-- 			value="org.apache.commons.dbcp2:name=dataSource,type=BasicDataSource" /> -->
+<!-- 	</bean> -->
+	
+	<bean id="hikariConfig" class="com.zaxxer.hikari.HikariConfig">
+       <property name="poolName" value="springHikariCP" />
+       <property name="connectionTestQuery" value="select 1 from dual" />
+       <property name="dataSourceClassName" value="oracle.jdbc.pool.OracleDataSource" />
+       <property name="maximumPoolSize" value="10" />
+       <property name="minimumIdle" value="5" />
+       <property name="maxLifetime" value="0" />
+       <property name="idleTimeout" value="10000" />
+       <property name="registerMbeans" value="true" />
+       <property name="dataSourceProperties">
+          <props>
+             <prop key="url">jdbc:oracle:thin:@localhost:1521:XE</prop>
+             <prop key="user">CIP_test</prop>
+             <prop key="password">123</prop>
+          </props>
+       </property>
+   </bean>
+ 
+   <!-- HikariCP configuration -->
+   <bean id="dataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+       <constructor-arg ref="hikariConfig" />
+   </bean>
+
+	<!-- For Service Bean Example -->
+	<bean name="exampleService"
+		class="com.esb.cbp.service.ExampleService" />
+	<bean name="custContactDao"
+		class="com.esb.cbp.dao.CustContactDaoImpl" />
+	<bean name="cusService"
+		class="com.esb.cbp.service.CustomerServiceImpl" />
+	<bean name="customerDao" class="com.esb.cbp.dao.CustomerDaoImpl" />
+	<!-- For Service Bean Example -->
+
+	<!-- For AOP Example -->
+	<bean id="controllerAspect"
+		class="com.esb.cbp.aspect.ControllerAspect" />
+
+	<aop:config proxy-target-class="true">
+		<aop:aspect id="controllerAspect" ref="controllerAspect">
+			<aop:pointcut id="businessService"
+				expression="execution(* com.esb.cbp.controller.*.*(..))" />
+			<aop:before pointcut-ref="businessService"
+				method="doBefore" />
+			<aop:after pointcut-ref="businessService" method="doAfter" />
+			<aop:around pointcut-ref="businessService"
+				method="doAround" />
+		</aop:aspect>
+	</aop:config>
+	<!-- For AOP Example -->
+
+	<!-- For Initialize Database Example -->
+	<!-- <jdbc:initialize-database data-source="dataSource" enabled="false" -->
+	<!-- > <jdbc:script location="classpath:/ddl/schema/*.sql" /> <jdbc:script 
+		location="classpath:/ddl/init/*.sql" -->
+	<!-- /> </jdbc:initialize-database> -->
+	<!-- For Initialize Database Example -->
+</beans>
